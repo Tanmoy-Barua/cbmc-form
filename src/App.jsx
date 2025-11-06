@@ -27,16 +27,16 @@ export default function App() {
   ==========================*/
   useEffect(() => {
     const applyTimeTheme = () => {
-      const hour = new Date().getHours(); // local time
+      const hour = new Date().getHours();
       const theme = hour >= 7 && hour <= 18 ? "light" : "dark";
       document.documentElement.setAttribute("data-bs-theme", theme);
     };
     applyTimeTheme();
-    const timer = setInterval(applyTimeTheme, 60 * 1000); // re-check every minute
+    const timer = setInterval(applyTimeTheme, 60 * 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // ===== FORM =====
+  // ===== FORM STATE =====
   const [form, setForm] = useState({
     memberType: "",
     name: "",
@@ -91,7 +91,7 @@ export default function App() {
     return () => unsub();
   }, []);
 
-  /* ========= Firestore: submit ========= */
+  /* ========= Firestore: submit (checkbox required) ========= */
   const onSubmit = async (e) => {
     e.preventDefault();
     setStatus("");
@@ -101,10 +101,16 @@ export default function App() {
       return;
     }
 
-    // Firestore-friendly payload (no undefined)
+    // Require the agreement checkbox
+    if (!form.agree) {
+      setStatus("Please agree to the CBMC By Laws to continue.");
+      document.getElementById("agree")?.focus();
+      return;
+    }
+
     const payload = {
       ...form,
-      agree: !!form.agree,
+      agree: true, // guaranteed by the check above
       recommender1: form.recommender1 || { signature: "", date: "", printName: "" },
       recommender2: form.recommender2 || { signature: "", date: "", printName: "" },
       secretary:    form.secretary    || { signature: "", date: "", printName: "" },
@@ -114,16 +120,16 @@ export default function App() {
 
     try {
       await addDoc(collection(db, "applications"), payload);
-      setStatus("Saved to database ✓"); // list will refresh via onSnapshot
-      // Optional: reset some fields
-      // setForm(prev => ({ ...prev, memberType:"", name:"", email:"", address:"", city:"", state:"", zip:"", agree:false, applicantSignature:"", applicantDate:"", applicantPrintName:"", recommender1:{signature:"",date:"",printName:""}, recommender2:{signature:"",date:"",printName:""}, secretary:{signature:"",date:"",printName:""}, president:{signature:"",date:"",printName:""}, effectiveDate:"", votingDate:"", electionDate:"" }));
+      setStatus("Saved to database ✓"); // list auto-refreshes via onSnapshot
+      // Optionally reset the form here if you want
+      // setForm({ ...initialState });
     } catch (err) {
       console.error(err);
       setStatus("Error saving to database.");
     }
   };
 
-  /* Helper to safely render Firestore Timestamp or ISO string */
+  /* Helper: safely render Firestore Timestamp or ISO string */
   const formatCreatedAt = (value) => {
     if (!value) return "…";
     const d = value.toDate ? value.toDate() : new Date(value);
@@ -182,6 +188,7 @@ export default function App() {
               placeholder="Ada Lovelace"
               value={form.name}
               onChange={onChange}
+              required
             />
           </div>
 
@@ -197,6 +204,7 @@ export default function App() {
               placeholder="ada@example.com"
               value={form.email}
               onChange={onChange}
+              required
             />
           </div>
 
@@ -409,7 +417,7 @@ export default function App() {
             />
           </div>
 
-          {/* Agreement */}
+          {/* Agreement (required) */}
           <div className="form-check my-4">
             <input
               className="form-check-input"
@@ -418,6 +426,7 @@ export default function App() {
               name="agree"
               checked={form.agree}
               onChange={onChange}
+              required
             />
             <label className="form-check-label" htmlFor="agree">
               I hereby apply for CBMC membership and agree to abide by the By
