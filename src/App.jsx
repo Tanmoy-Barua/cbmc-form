@@ -8,21 +8,23 @@ const US_STATES = [
 ];
 
 export default function App() {
-  // THEME
-  const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "light");
+  /* =========================
+     AUTO THEME BY LOCAL TIME
+     Light: 07:00–18:59
+     Dark : 19:00–06:59
+  ==========================*/
   useEffect(() => {
-    document.documentElement.setAttribute("data-bs-theme", theme);
-    localStorage.setItem("theme", theme);
-  }, [theme]);
-  const toggleTheme = () => setTheme(t => (t === "light" ? "dark" : "light"));
-  const toggleKey = (e) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      toggleTheme();
-    }
-  };
+    const applyTimeTheme = () => {
+      const hour = new Date().getHours(); // local time
+      const theme = hour >= 7 && hour <= 18 ? "light" : "dark";
+      document.documentElement.setAttribute("data-bs-theme", theme);
+    };
+    applyTimeTheme();
+    const timer = setInterval(applyTimeTheme, 60 * 1000); // re-check every minute
+    return () => clearInterval(timer);
+  }, []);
 
-  // FORM
+  // ===== FORM =====
   const [form, setForm] = useState({
     memberType: "",
     name: "",
@@ -72,30 +74,14 @@ export default function App() {
       <div className="container" style={{ maxWidth: "850px" }}>
         {/* Header */}
         <header className="mb-4 position-relative">
-          <div className="d-flex justify-content-between align-items-center">
-            <div className="flex-grow-1 text-center pe-3">
+          <div className="d-flex justify-content-center align-items-center text-center">
+            <div className="flex-grow-1">
               <h1 className="fw-bold mb-1">California Buddhist Meditation Center (CBMC)</h1>
               <h5 className="text-secondary mb-1">Los Angeles, CA</h5>
               <p className="text-secondary mb-0">
                 Established: 3<sup>rd</sup> March 2018
               </p>
             </div>
-
-            {/* Theme Toggle (custom pill) */}
-            <button
-              type="button"
-              className="theme-switch ms-2"
-              role="switch"
-              aria-checked={theme === "dark"}
-              aria-label="Toggle dark mode"
-              data-mode={theme}
-              onClick={toggleTheme}
-              onKeyDown={toggleKey}
-            >
-              <i className="bi bi-sun theme-icon-sun" aria-hidden="true"></i>
-              <span className="theme-knob" />
-              <i className="bi bi-moon-stars theme-icon-moon" aria-hidden="true"></i>
-            </button>
           </div>
         </header>
 
@@ -380,7 +366,6 @@ export default function App() {
           </div>
 
           <div className="d-flex align-items-center gap-3">
-            {/* FIX: use btn-primary so it stays visible in dark theme */}
             <button type="submit" className="btn btn-primary px-4">
               <i className="bi bi-send me-2"></i>Submit
             </button>
