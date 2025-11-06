@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const US_STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
@@ -8,6 +8,21 @@ const US_STATES = [
 ];
 
 export default function App() {
+  // THEME
+  const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "light");
+  useEffect(() => {
+    document.documentElement.setAttribute("data-bs-theme", theme);
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+  const toggleTheme = () => setTheme(t => (t === "light" ? "dark" : "light"));
+  const toggleKey = (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      toggleTheme();
+    }
+  };
+
+  // FORM
   const [form, setForm] = useState({
     memberType: "",
     name: "",
@@ -17,19 +32,13 @@ export default function App() {
     state: "",
     zip: "",
     agree: false,
-
-    // Applicant signature block
     applicantSignature: "",
     applicantDate: "",
     applicantPrintName: "",
-
-    // Recommendation & approvals
     recommender1: { signature: "", date: "", printName: "" },
     recommender2: { signature: "", date: "", printName: "" },
     secretary: { signature: "", date: "", printName: "" },
     president: { signature: "", date: "", printName: "" },
-
-    // Dates
     effectiveDate: "",
     votingDate: "",
     electionDate: ""
@@ -41,53 +50,59 @@ export default function App() {
   const onChange = (e, group = null) => {
     const { name, value, type, checked } = e.target;
     if (group) {
-      setForm((prev) => ({
-        ...prev,
-        [group]: { ...prev[group], [name]: value }
-      }));
+      setForm(prev => ({ ...prev, [group]: { ...prev[group], [name]: value }}));
     } else {
-      setForm((prev) => ({
-        ...prev,
-        [name]: type === "checkbox" ? checked : value
-      }));
+      setForm(prev => ({ ...prev, [name]: type === "checkbox" ? checked : value }));
     }
   };
 
   const onSubmit = (e) => {
     e.preventDefault();
-
     if (!form.memberType || !form.name || !form.email) {
       setStatus("Please fill in all required fields.");
       return;
     }
-
-    const newEntry = {
-      ...form,
-      id: Date.now(),
-      created_at: new Date().toISOString()
-    };
-
+    const newEntry = { ...form, id: Date.now(), created_at: new Date().toISOString() };
     setSubmitted([newEntry, ...submitted]);
     setStatus("Saved locally. (DB connection coming next!)");
   };
 
   return (
-    <div className="d-flex justify-content-center align-items-center min-vh-100 bg-white">
-      <div className="container text-center" style={{ maxWidth: "850px" }}>
+    <div className="d-flex justify-content-center align-items-center min-vh-100 bg-body text-body">
+      <div className="container" style={{ maxWidth: "850px" }}>
         {/* Header */}
-        <header className="mb-4">
-          <h1 className="fw-bold mb-1">
-            California Buddhist Meditation Center (CBMC)
-          </h1>
-          <h5 className="text-secondary mb-1">Los Angeles, CA</h5>
-          <p className="text-secondary">
-            Established: 3<sup>rd</sup> March 2018
-          </p>
+        <header className="mb-4 position-relative">
+          <div className="d-flex justify-content-between align-items-center">
+            <div className="flex-grow-1 text-center pe-3">
+              <h1 className="fw-bold mb-1">California Buddhist Meditation Center (CBMC)</h1>
+              <h5 className="text-secondary mb-1">Los Angeles, CA</h5>
+              <p className="text-secondary mb-0">
+                Established: 3<sup>rd</sup> March 2018
+              </p>
+            </div>
+
+            {/* Theme Toggle (custom pill) */}
+            <button
+              type="button"
+              className="theme-switch ms-2"
+              role="switch"
+              aria-checked={theme === "dark"}
+              aria-label="Toggle dark mode"
+              data-mode={theme}
+              onClick={toggleTheme}
+              onKeyDown={toggleKey}
+            >
+              <i className="bi bi-sun theme-icon-sun" aria-hidden="true"></i>
+              <span className="theme-knob" />
+              <i className="bi bi-moon-stars theme-icon-moon" aria-hidden="true"></i>
+            </button>
+          </div>
         </header>
 
+        {/* FORM */}
         <form onSubmit={onSubmit} noValidate className="text-start">
-          {/* Member Type */}
           <hr />
+          {/* Member Type */}
           <div className="mb-3">
             <label htmlFor="memberType" className="form-label fw-semibold">
               Type of Member <span className="text-danger">*</span>
@@ -181,7 +196,7 @@ export default function App() {
                 onChange={onChange}
               >
                 <option value="">—</option>
-                {US_STATES.map((s) => (
+                {US_STATES.map(s => (
                   <option key={s} value={s}>{s}</option>
                 ))}
               </select>
@@ -280,9 +295,7 @@ export default function App() {
           <div className="row">
             {["secretary", "president"].map((role) => (
               <div key={role} className="col-md-6 mb-3">
-                <label className="fw-semibold text-capitalize">
-                  {role}
-                </label>
+                <label className="fw-semibold text-capitalize">{role}</label>
                 <input
                   type="text"
                   className="form-control my-2"
@@ -313,9 +326,7 @@ export default function App() {
           {/* Dates Section */}
           <h5 className="mt-4 mb-3 text-secondary">Membership Dates</h5>
           <div className="mb-3">
-            <label className="form-label fw-semibold">
-              Membership Effective Date
-            </label>
+            <label className="form-label fw-semibold">Membership Effective Date</label>
             <input
               type="date"
               name="effectiveDate"
@@ -369,10 +380,11 @@ export default function App() {
           </div>
 
           <div className="d-flex align-items-center gap-3">
-            <button type="submit" className="btn btn-dark px-4">
+            {/* FIX: use btn-primary so it stays visible in dark theme */}
+            <button type="submit" className="btn btn-primary px-4">
               <i className="bi bi-send me-2"></i>Submit
             </button>
-            <span className="text-muted small">{status}</span>
+            <span className="text-secondary small">{status}</span>
           </div>
         </form>
 
@@ -384,46 +396,36 @@ export default function App() {
           )}
           <div className="vstack gap-2">
             {submitted.map((entry) => (
-              <div key={entry.id} className="border rounded-3 p-3 bg-light">
+              <div key={entry.id} className="border rounded-3 p-3 bg-light-subtle">
                 <div className="fw-semibold">
                   {entry.name}{" "}
                   <span className="text-secondary">&lt;{entry.email}&gt;</span>
                 </div>
-
                 {entry.memberType && (
                   <div className="text-secondary small">
                     Member Type: {entry.memberType}
                   </div>
                 )}
-
                 {(entry.address || entry.city) && (
                   <div className="text-secondary small mt-1">
                     {entry.address}, {entry.city} {entry.state} {entry.zip}
                   </div>
                 )}
-
                 {(entry.applicantSignature || entry.applicantPrintName) && (
                   <div className="text-secondary small mt-1">
                     Applicant: {entry.applicantPrintName || "N/A"} | Signature:{" "}
-                    {entry.applicantSignature || "—"} | Date:{" "}
-                    {entry.applicantDate || "—"}
+                    {entry.applicantSignature || "—"} | Date: {entry.applicantDate || "—"}
                   </div>
                 )}
-
                 <div className="text-secondary small mt-1">
-                  Effective Date: {entry.effectiveDate || "N/A"} | Voting:{" "}
-                  {entry.votingDate || "N/A"} | Election:{" "}
-                  {entry.electionDate || "N/A"}
+                  Effective Date: {entry.effectiveDate || "N/A"} | Voting: {entry.votingDate || "N/A"} | Election: {entry.electionDate || "N/A"}
                 </div>
                 <div className="text-secondary small mt-1">
-                  Recommenders: {entry.recommender1.printName || "—"},{" "}
-                  {entry.recommender2.printName || "—"}
+                  Recommenders: {entry.recommender1.printName || "—"}, {entry.recommender2.printName || "—"}
                 </div>
                 <div className="text-secondary small mt-1">
-                  Approved by: Sec. {entry.secretary.printName || "—"}, Pres.{" "}
-                  {entry.president.printName || "—"}
+                  Approved by: Sec. {entry.secretary.printName || "—"}, Pres. {entry.president.printName || "—"}
                 </div>
-
                 <div className="text-secondary small mt-1">
                   Submitted: {new Date(entry.created_at).toLocaleString()}
                 </div>
