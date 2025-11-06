@@ -1,5 +1,17 @@
 import React, { useState, useEffect } from "react";
 
+/* ===== Firestore imports ===== */
+import { db } from "./lib/firebase";
+import {
+  collection,
+  addDoc,
+  serverTimestamp,
+  query,
+  orderBy,
+  limit,
+  onSnapshot,
+} from "firebase/firestore";
+
 const US_STATES = [
   "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA","HI","ID","IL","IN","IA",
   "KS","KY","LA","ME","MD","MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ",
@@ -58,15 +70,64 @@ export default function App() {
     }
   };
 
-  const onSubmit = (e) => {
+  /* ========= Firestore: live load ========= */
+  useEffect(() => {
+    const q = query(
+      collection(db, "applications"),
+      orderBy("created_at", "desc"),
+      limit(50)
+    );
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        const rows = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        setSubmitted(rows);
+      },
+      (err) => {
+        console.error(err);
+        setStatus("Could not load live updates.");
+      }
+    );
+    return () => unsub();
+  }, []);
+
+  /* ========= Firestore: submit ========= */
+  const onSubmit = async (e) => {
     e.preventDefault();
+    setStatus("");
+
     if (!form.memberType || !form.name || !form.email) {
       setStatus("Please fill in all required fields.");
       return;
     }
-    const newEntry = { ...form, id: Date.now(), created_at: new Date().toISOString() };
-    setSubmitted([newEntry, ...submitted]);
-    setStatus("Saved locally. (DB connection coming next!)");
+
+    // Firestore-friendly payload (no undefined)
+    const payload = {
+      ...form,
+      agree: !!form.agree,
+      recommender1: form.recommender1 || { signature: "", date: "", printName: "" },
+      recommender2: form.recommender2 || { signature: "", date: "", printName: "" },
+      secretary:    form.secretary    || { signature: "", date: "", printName: "" },
+      president:    form.president    || { signature: "", date: "", printName: "" },
+      created_at: serverTimestamp(),
+    };
+
+    try {
+      await addDoc(collection(db, "applications"), payload);
+      setStatus("Saved to database ✓"); // list will refresh via onSnapshot
+      // Optional: reset some fields
+      // setForm(prev => ({ ...prev, memberType:"", name:"", email:"", address:"", city:"", state:"", zip:"", agree:false, applicantSignature:"", applicantDate:"", applicantPrintName:"", recommender1:{signature:"",date:"",printName:""}, recommender2:{signature:"",date:"",printName:""}, secretary:{signature:"",date:"",printName:""}, president:{signature:"",date:"",printName:""}, effectiveDate:"", votingDate:"", electionDate:"" }));
+    } catch (err) {
+      console.error(err);
+      setStatus("Error saving to database.");
+    }
+  };
+
+  /* Helper to safely render Firestore Timestamp or ISO string */
+  const formatCreatedAt = (value) => {
+    if (!value) return "…";
+    const d = value.toDate ? value.toDate() : new Date(value);
+    return d.toLocaleString();
   };
 
   return (
@@ -406,13 +467,13 @@ export default function App() {
                   Effective Date: {entry.effectiveDate || "N/A"} | Voting: {entry.votingDate || "N/A"} | Election: {entry.electionDate || "N/A"}
                 </div>
                 <div className="text-secondary small mt-1">
-                  Recommenders: {entry.recommender1.printName || "—"}, {entry.recommender2.printName || "—"}
+                  Recommenders: {entry.recommender1?.printName || "—"}, {entry.recommender2?.printName || "—"}
                 </div>
                 <div className="text-secondary small mt-1">
-                  Approved by: Sec. {entry.secretary.printName || "—"}, Pres. {entry.president.printName || "—"}
+                  Approved by: Sec. {entry.secretary?.printName || "—"}, Pres. {entry.president?.printName || "—"}
                 </div>
                 <div className="text-secondary small mt-1">
-                  Submitted: {new Date(entry.created_at).toLocaleString()}
+                  Submitted: {formatCreatedAt(entry.created_at)}
                 </div>
               </div>
             ))}
