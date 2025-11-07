@@ -126,3 +126,9 @@ h1 { font-family: "UnifrakturMaguntia", cursive; }
 
 /* Ensure readable primary button in dark theme */
 [data-bs-theme="dark"] .btn-primary { color: #fff; }
+
+/* Logo sign */
+.nav-logo {
+  font-size: 1.5rem;
+  color: var(--bs-primary);
+}
