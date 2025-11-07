@@ -2,7 +2,9 @@
 
 /* Basic reset */
 * { margin: 0; padding: 0; }
-
+a{
+  text-decoration: none;
+}
 /* Let Bootstrap theming control colors */
 body {
   display: block !important;

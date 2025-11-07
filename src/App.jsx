@@ -25,7 +25,7 @@ export default function App() {
           </Link>
           <div className="d-flex gap-3">
             <NavLink to="/" end className={({isActive}) => isActive ? "link-primary" : "link-secondary"}>
-              Form
+              Home
             </NavLink>
             {/* <NavLink to="/submissions" className={({isActive}) => isActive ? "link-primary" : "link-secondary"}>
               Submissions
