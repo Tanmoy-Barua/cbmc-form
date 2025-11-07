@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+// import React, { useEffect } from "react";
 import { Routes, Route, Link, NavLink } from "react-router-dom";
 import FormPage from "./pages/FormPage";
 import SubmissionsPage from "./pages/SubmissionsPage";
@@ -27,9 +27,9 @@ export default function App() {
             <NavLink to="/" end className={({isActive}) => isActive ? "link-primary" : "link-secondary"}>
               Home
             </NavLink>
-            {/* <NavLink to="/submissions" className={({isActive}) => isActive ? "link-primary" : "link-secondary"}>
+            <NavLink to="/submissions" className={({isActive}) => isActive ? "link-primary" : "link-secondary"}>
               Submissions
-            </NavLink> */}
+            </NavLink>
           </div>
         </div>
       </nav>
