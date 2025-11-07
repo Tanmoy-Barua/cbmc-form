@@ -5,16 +5,16 @@ import SubmissionsPage from "./pages/SubmissionsPage";
 
 export default function App() {
   // Auto theme by local time
-  useEffect(() => {
-    const applyTimeTheme = () => {
-      const hour = new Date().getHours();
-      const theme = hour >= 7 && hour <= 18 ? "light" : "dark";
-      document.documentElement.setAttribute("data-bs-theme", theme);
-    };
-    applyTimeTheme();
-    const t = setInterval(applyTimeTheme, 60 * 1000);
-    return () => clearInterval(t);
-  }, []);
+//   useEffect(() => {
+//     const applyTimeTheme = () => {
+//       const hour = new Date().getHours();
+//       const theme = hour >= 7 && hour <= 18 ? "light" : "dark";
+//       document.documentElement.setAttribute("data-bs-theme", theme);
+//     };
+//     applyTimeTheme();
+//     const t = setInterval(applyTimeTheme, 60 * 1000);
+//     return () => clearInterval(t);
+//   }, []);
 
   return (
     <div className="min-vh-100 bg-body text-body d-flex flex-column">
