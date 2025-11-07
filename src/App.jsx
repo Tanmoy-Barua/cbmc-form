@@ -27,9 +27,9 @@ export default function App() {
             <NavLink to="/" end className={({isActive}) => isActive ? "link-primary" : "link-secondary"}>
               Form
             </NavLink>
-            <NavLink to="/submissions" className={({isActive}) => isActive ? "link-primary" : "link-secondary"}>
+            {/* <NavLink to="/submissions" className={({isActive}) => isActive ? "link-primary" : "link-secondary"}>
               Submissions
-            </NavLink>
+            </NavLink> */}
           </div>
         </div>
       </nav>
